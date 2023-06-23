@@ -5,15 +5,18 @@ from requests.auth import HTTPBasicAuth
 
 # Diese Daten müssen angepasst werden:
 serial = "112100000000" # Seriennummer des Hoymiles Wechselrichters
-maximum_wr = 300 # Maximale Ausgabe des Wechselrichters
-minimum_wr = 100 # Minimale Ausgabe des Wechselrichters
+maximum_wr = 600 # Maximale Ausgabe des Wechselrichters
+minimum_wr = 20 # Minimale Ausgabe des Wechselrichters
 
-dtu_ip = '192.100.100.20' # IP Adresse von OpenDTU
+dtu_ip = '192.168.0.55' # IP Adresse von OpenDTU
 dtu_nutzer = 'admin' # OpenDTU Nutzername
 dtu_passwort = 'openDTU42' # OpenDTU Passwort
 
-shelly_ip = '192.100.100.30' # IP Adresse von Shelly 3EM
+tasmota_ip = '192.168.0.54' # IP Adresse des Tasmota-Lesekopfs
+tasmota_zaehlername = '' # Falls im Skript des Lesekopfes ein Name des Stromzählers angegeben wurde, diesen hier angeben
+tasmota_schluessel = 'aktuelle_wirkleistung' #Der im Skript des Lesekopfes vergebene Schlüsselname, aus dem der aktuelle Leistungssaldo des Stromzählers ausgelesen werden kann
 
+grid_sum = 0
 
 while True:
     try:
@@ -29,13 +32,11 @@ while True:
     except:
         print('Fehler beim Abrufen der Daten von openDTU')
     try:
-        # Nimmt Daten von der Shelly 3EM Rest-API und übersetzt sie in ein json-Format
-        phase_a     = requests.get(f'http://{shelly_ip}/emeter/0', headers={'Content-Type': 'application/json'}).json()['power']
-        phase_b     = requests.get(f'http://{shelly_ip}/emeter/1', headers={'Content-Type': 'application/json'}).json()['power']
-        phase_c     = requests.get(f'http://{shelly_ip}/emeter/2', headers={'Content-Type': 'application/json'}).json()['power']
-        grid_sum    = phase_a + phase_b + phase_c # Aktueller Bezug - rechnet alle Phasen zusammen
+        # Nimmt Daten vom Tasmota-Lesekopf und übersetzt sie in ein json-Format
+        r = requests.get(url = f'http://{tasmota_ip}/cm?cmnd=status%2010' ).json()
+        grid_sum = int(r['StatusSNS'][tasmota_zaehlername][tasmota_schluessel])
     except:
-        print('Fehler beim Abrufen der Daten von Shelly 3EM')
+        print('Fehler beim Abrufen der Daten vom Lesekopf')
 
     # Werte setzen
     print(f'\nBezug: {round(grid_sum, 1)} W, Produktion: {round(power, 1)} W, Verbrauch: {round(grid_sum + power, 1)} W')
@@ -53,7 +54,7 @@ while True:
         else:
             print(f'Setpoint berechnet: {round(grid_sum, 1)} W + {round(altes_limit, 1)} W - 5 W = {round(setpoint, 1)} W')
 
-        if setpoint != altes_limit:
+        if (setpoint > (altes_limit + 5)) or (setpoint < (altes_limit - 5)): #Limitänderungen von weniger als 5 Watt werden nicht an den Wechselrichter kommandiert
             print(f'Setze Inverterlimit von {round(altes_limit, 1)} W auf {round(setpoint, 1)} W... ', end='')
             # Neues Limit setzen
             try:
@@ -68,4 +69,5 @@ while True:
                 print('Fehler beim Senden der Konfiguration')
 
     sys.stdout.flush() # write out cached messages to stdout
-    time.sleep(5) # wait
+    time.sleep(15) # wait
+          
