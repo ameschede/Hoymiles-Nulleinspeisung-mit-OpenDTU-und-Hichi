@@ -21,7 +21,7 @@ tasmota_schluessel = 'aktuelle_wirkleistung' #Der im Skript des Lesekopfes verge
 # Um die hier benötigten Zugangsdaten zu bekommen, muss einmalig wie unter https://github.com/Zendure/developer-device-data-report beschrieben ein appKey angefragt werden
 mqtt_broker = 'mqtt.zen-iot.com'
 mqtt_port = 1883
-mqtt_topic = "66666666/E3GUng9N/state" # Das anzufragende Topic setzt sich aus dem appKey und einem Subtopic zusammen
+mqtt_topic = "66666666/E3GUng9N/state" # Das anzufragende Topic setzt sich aus dem appKey und einer Gerätekennung zusammen. Die Gerätekennung muss ggfs. durch händischen Login in den MQTT-Broker ermittelt werden.
 mqtt_username = '66666666' # Username entspricht bei Zendure dem appKey
 mqtt_password = '777777777777777777777777777777777' # Passwort entspricht dem secret bei Zendure
 # Ende der anzupassenden Daten
@@ -124,8 +124,8 @@ while True:
 			print(f'Setpoint-Anpassung schlecht anfahrbarer Bereich auf {setpoint} W')
 		
 		# Bei vollem Akku die Nulleinspeisung abschalten
-		if ((fuellstand > 99 ) and (power_solar > (grid_sum + power))):
-			setpoint = power_solar + 10 # Die +10 soll ihn dazu bringen, ggfs. die PV-Leistung hochzufahren
+		if ((fuellstand > 98 ) and (power_solar > (grid_sum + power))): # Hier ist als Grenzwert 98 % festgelegt, da zwischen 99 und 100 % der SolarFlow mitunter schon die PV abregelt.
+			setpoint = power_solar # Durch die Verluste zwischen dem Eingang des PV-Hubs und dem Ausgang des Wechselrichters kommt es zu einem (wünschenswerten) langsamen Hochfahren der PV-Leistung
 			print('Nulleinspeisung aufgrund vollem Akku deaktiviert')
 			
 		# Fange oberes Limit ab
