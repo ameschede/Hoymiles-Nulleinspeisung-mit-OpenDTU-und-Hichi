@@ -4,6 +4,10 @@ Dies ist ein Python-Skript, das den aktuellen Hausverbrauch aus einem Tasmota-ba
 
 Ich selbst nutze das Skript mit einem Zendure SolarFlow und Hoymiles HM-600. Das Skript ist teilweise auf die Bedürfnisse dieser Komponenten parametriert. Andere Hardware verhält sich möglicherweise anders und erfordert Anpassungen.
 
+## Wie komme ich an die Zugangsdaten für den Zendure-MQTT-Server?
+
+Hierfür muss man in der Lage sein, einen HTTP-POST-Request absetzen zu können. Das geht zum Beispiel mit https://app.reqbin.com/#/request/zvtstmpb. Anschließend folgt man den Anweisungen in https://github.com/Zendure/developer-device-data-report#apply-to-be-a-developer. Dadurch erhält man von Zendure einen AppKey und ein "Secret". Man muss allerdings auch noch die Gerätekennung des SolarFlows in Erfahrung bringen. Hierzu empfehle ich ein Tool wie http://mqtt-explorer.com. Darin meldet man sich mit den von Zendure erhaltenen Zugangsdaten an Zendures MQTT-Broker an, und kann dann die Gerätekennung sehen.
+
 ## Tipp für den Fehlerfall
 
 Es kann immer mal sein, dass es in der Kette Stromzähler - Lesekopf - Python-Server - DTU - Wechselrichter an irgendeiner Stelle zu vorübergehenden Problemen kommt, und das Limit des Wechselrichters deshalb zeitweise nicht verstellt werden kann. Besonders ärgerlich ist das, wenn der Wechselrichter wieder hochkommt, nachdem der Akku leer war. Auf Werkseinstellungen wird der Wechselrichter dann mit Volldampf einzuspeisen versuchen und den Akku sofort wieder leer ziehen. OpenDTU bietet die Möglichkeit, ein dauerhaftes Wechselrichter-Limit zu setzen. Dieses dauerhafte Limit bleibt auch erhalten, wenn der Wechselrichter spannungslos wurde. Im laufenden Betrieb wird es dann vom temporären Limit überschrieben, aber es würde immer dann greifen wenn nach dem Start des Wechselrichters kein temporäres Limit übermittelt wird.
